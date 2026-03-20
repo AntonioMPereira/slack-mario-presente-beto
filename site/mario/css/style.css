@@ -1,0 +1,206 @@
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    background: #1B1B1D;
+    color: white;
+    font-family: 'Press Start 2P', cursive;
+}
+#canvas {
+    width: 100vw;
+    max-width: 700px;
+    min-width: 540px;
+    max-height: 100vh;
+}
+.canvas-max-height {
+    max-height: 80vh !important;
+}
+.canvasScreen {
+    background: url("../files/background.png");
+    background-repeat: no-repeat;
+    background-size: cover;
+    position: relative;
+}
+h1 {
+    font-weight: bold;
+    font-size: 2.5em;
+    padding-top: 20px;
+}
+.sound {
+    position: absolute;
+    bottom: 100px;
+    left: 120px;
+}
+.noSound {
+    position: absolute;
+    bottom: 100px;
+    right: 120px;
+    
+}
+
+.btn {
+    font-size: 20px;
+    width: 220px;
+    font-family: sans-serif;
+    padding: 10px;
+    background: rgb(0,240, 244);
+    border-radius: 5px;
+    color: #1B1B1D;
+    border: 2px black solid;
+    font-weight: bold;
+}
+.expand {
+    width: 28px;
+    height: 30px;
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    background: rgb(0,218, 244);
+    border-radius: 1px;
+    color: #1B1B1D;
+    border: 2px black solid;
+    font-weight: bold;
+    padding: 5px;
+}
+.expand:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    background-color: rgb(45,68,244);
+    color: white;
+    cursor: pointer;
+}
+.btn:hover {
+    background-color: rgb(45,68,244);
+    color: white;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    cursor: pointer;
+}
+.icons {
+    /* margin-bottom: 20px; */
+    padding: 10px;
+}
+a {
+    /* margin: 10px; */
+    color: rgb(0,218, 244);
+    text-decoration: none;
+}
+a:hover {
+    cursor: pointer;
+    color: white;
+}
+.instructions {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    /* margin-bottom: 20px; */
+}
+.instruction-content {
+    /* padding: 10px; */
+}
+.heading {
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.instructionHighlight {
+    color: rgb(0,218, 244);
+    font-size: 24px;
+}
+.WASD {
+    font-weight: bold;
+    font-size: 20px;
+    margin-right: -5px;
+}
+.no-before::before {
+    content: none !important;
+}
+.input-controls {
+    display: none;
+}
+.btn-input {
+    background-color: rgb(0,240, 244);
+    color: #1B1B1D;
+    border: 2px black solid;
+    /* border-radius: 50%; */
+    font-family: sans-serif;
+    font-size: 30px;
+    padding: 20px;
+}
+.controller-side {
+    display: flex;
+    flex-direction: row;
+    /* align-content: flex-start;
+    justify-content: flex-start; */
+}
+/* .crouch h4{
+    font-size: 25px;
+    margin-top: 4px;
+} */
+.input-controls-wrapper {
+    display: none;
+    position: absolute;
+    width: 100%;
+}
+.controller-padding {
+    display: none;
+    height: 70px;
+}
+.mobile-portrait-view-text {
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+}
+.close {
+    display: none;
+    height: 0px;
+}
+.attach-controls-to-bottom {
+    bottom: 0px;
+}
+#touch-input-right {
+    padding: 20px 35px;
+}
+#touch-input-left {
+    padding: 20px 35px;
+    margin-right: 100px;
+}
+#touch-input-jump {
+    padding: 20px 50px;
+    font-weight: bold;
+}
+h4 {
+    text-align: center;
+}
+.touch-btn-active {
+    background-color: rgb(45,68,244);
+    color: white;
+}
+@media only screen and (max-width: 1024px) { 
+    .input-controls {
+        display: flex;
+        flex-direction: row;
+        align-content: flex-start;
+        justify-content: space-around;
+    }
+    
+}
+@media only screen and (orientation: portrait) {
+
+    .controller-padding {
+        display: block !important;
+    }
+    .mobile-portrait-view-text {
+        display: flex;
+    }
+    .mobile-portrait-view-text h1 {
+        margin-bottom: -300px;
+        line-height: 50px;
+        padding: 50px;
+    }
+
+}
