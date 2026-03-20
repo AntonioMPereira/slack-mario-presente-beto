@@ -139,7 +139,7 @@ body::after {
   <div class="text" id="msgText">
     Não daria pra fazer em 30 minutos...<br>
     mas daria sim. 😄<br>
-    Espere mais 15 segundos.
+    Espere mais 5 segundos.
   </div>
   <div class="sub" id="msgSub">iniciando mario world...</div>
 </div>
@@ -228,10 +228,10 @@ body::after {
   // ─── PHASE 1: BOOT ───
   function runBoot() {
     return new Promise(function(resolve) {
-      // Calculate total delay to fit in ~13s, leaving 2s for ASCII
+      // Calculate total delay to fit in ~4s, leaving 1s for ASCII
       var totalDelay = 0;
       bootLines.forEach(function(l) { totalDelay += l.delay; });
-      var scale = 13000 / totalDelay;
+      var scale = 4000 / totalDelay;
 
       var idx = 0;
       function nextLine() {
@@ -245,8 +245,8 @@ body::after {
               bootEl.appendChild(span);
             });
             bootEl.scrollTop = bootEl.scrollHeight;
-            setTimeout(resolve, 2000);
-          }, 200);
+            setTimeout(resolve, 800);
+          }, 100);
           return;
         }
         var line = bootLines[idx++];
@@ -285,13 +285,13 @@ body::after {
 
       setTimeout(function() {
         document.getElementById('msgText').classList.add('show');
-      }, 500);
+      }, 300);
 
       setTimeout(function() {
         document.getElementById('msgSub').classList.add('show');
-      }, 3000);
+      }, 1500);
 
-      setTimeout(resolve, 15000);
+      setTimeout(resolve, 5000);
     });
   }
 
@@ -332,7 +332,7 @@ body::after {
           break;
         }
       }
-    }, 60);
+    }, 30);
   }
 
   // ─── RUN ───
