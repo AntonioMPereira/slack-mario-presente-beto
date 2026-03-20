@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slackware 15.0 Boot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+
+/* CRT effect */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0,0,0,0.15) 0px,
+    rgba(0,0,0,0.15) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+body::after {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.6) 100%);
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* Phase 1: Boot */
+#boot {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  padding: 20px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: clamp(11px, 1.4vw, 16px);
+  line-height: 1.5;
+  color: #33ff33;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+#boot .kernel { color: #6699ff; }
+#boot .ok { color: #33ff33; }
+#boot .skip { color: #ffaa00; }
+#boot .white { color: #cccccc; }
+#boot .bright { color: #00ff00; font-weight: bold; }
+
+/* Phase 2: Message */
+#message {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+}
+#message .emoji {
+  font-size: clamp(60px, 12vw, 120px);
+  animation: pulse 1.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 20px #33ff33);
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+#message .text {
+  font-family: 'VT323', monospace;
+  font-size: clamp(22px, 4vw, 42px);
+  color: #fff;
+  text-shadow: 0 0 10px #33ff33, 0 0 20px #33ff33;
+  margin-top: 30px;
+  opacity: 0;
+  transition: opacity 2s ease-in;
+  line-height: 1.6;
+}
+#message .text.show { opacity: 1; }
+#message .sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: clamp(12px, 1.5vw, 18px);
+  color: #1a7a1a;
+  margin-top: 40px;
+  opacity: 0;
+  transition: opacity 1.5s ease-in;
+}
+#message .sub.show { opacity: 1; }
+
+/* Phase 3: Loading */
+#loading {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Share Tech Mono', monospace;
+  color: #33ff33;
+  padding: 20px;
+}
+#loading .bar-container {
+  width: min(80%, 600px);
+  border: 1px solid #33ff33;
+  padding: 3px;
+  margin-bottom: 15px;
+}
+#loading .bar {
+  height: 22px;
+  background: #33ff33;
+  width: 0%;
+  transition: width 0.3s linear;
+  box-shadow: 0 0 8px #33ff33;
+}
+#loading .percent {
+  font-size: clamp(16px, 2.5vw, 28px);
+  margin-bottom: 20px;
+  text-shadow: 0 0 6px #33ff33;
+}
+#loading .step {
+  font-size: clamp(12px, 1.5vw, 16px);
+  color: #1a7a1a;
+  min-height: 1.5em;
+}
+</style>
+</head>
+<body>
+
+<div id="boot"></div>
+<div id="message">
+  <div class="emoji">😄</div>
+  <div class="text" id="msgText">
+    Não daria pra fazer em 30 minutos...<br>
+    mas daria sim. 😄<br>
+    Espere mais 15 segundos.
+  </div>
+  <div class="sub" id="msgSub">iniciando mario world...</div>
+</div>
+<div id="loading">
+  <div class="percent" id="loadPercent">0%</div>
+  <div class="bar-container"><div class="bar" id="loadBar"></div></div>
+  <div class="step" id="loadStep"></div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ─── BOOT LINES ───
+  const bootLines = [
+    { text: 'BIOS: Checking system integrity...', cls: 'kernel', delay: 80 },
+    { text: 'GRUB 2.06 loading...', cls: 'white', delay: 100 },
+    { text: 'Loading Linux 5.15.19 ...', cls: 'kernel', delay: 200 },
+    { text: 'Loading initial ramdisk ...', cls: 'kernel', delay: 150 },
+    { text: '', delay: 100 },
+    { text: '[    0.000000] Linux version 5.15.19 (root@slackware15) (gcc 11.2.0)', cls: 'kernel', delay: 60 },
+    { text: '[    0.000000] Command line: BOOT_IMAGE=/vmlinuz-5.15.19 root=/dev/sda2 ro', cls: 'kernel', delay: 50 },
+    { text: '[    0.000000] x86/fpu: x87 FPU on board', cls: 'kernel', delay: 40 },
+    { text: '[    0.000000] BIOS-e820: [mem 0x0000000000000000-0x000000000009fbff] usable', cls: 'kernel', delay: 30 },
+    { text: '[    0.000001] NX (Execute Disable) protection: active', cls: 'kernel', delay: 40 },
+    { text: '[    0.000001] DMI: QEMU Standard PC (i440FX + PIIX, 1996)', cls: 'kernel', delay: 50 },
+    { text: '[    0.000002] tsc: Detected 2400.000 MHz processor', cls: 'kernel', delay: 40 },
+    { text: '[    0.004312] Calibrating delay loop (skipped), value calculated using timer frequency', cls: 'kernel', delay: 30 },
+    { text: '[    0.005102] pid_max: default: 32768 minimum: 301', cls: 'kernel', delay: 30 },
+    { text: '[    0.006211] Mount-cache hash table entries: 4096', cls: 'kernel', delay: 30 },
+    { text: '[    0.010034] CPU: Intel Xeon E5-2686 v4 stepping 01', cls: 'kernel', delay: 50 },
+    { text: '[    0.015921] Memory: 4038572K/4194304K available', cls: 'kernel', delay: 60 },
+    { text: '[    0.020112] ACPI: PM-Timer IO Port: 0x608', cls: 'kernel', delay: 30 },
+    { text: '[    0.043281] PCI: Using configuration type 1 for base access', cls: 'kernel', delay: 40 },
+    { text: '[    0.102938] clocksource: tsc: mask: 0xffffffffffffffff', cls: 'kernel', delay: 30 },
+    { text: '', delay: 50 },
+    { text: '[    0.214552] SCSI subsystem initialized', cls: 'kernel', delay: 40 },
+    { text: '[    0.215001] libata version 3.00 loaded.', cls: 'kernel', delay: 40 },
+    { text: '[    0.301221] ata1: SATA max UDMA/133 abar m2048@0xfebf1000', cls: 'kernel', delay: 50 },
+    { text: '[    0.510033] ata1.00: ATA-7: VBOX HARDDISK, 1.0, max UDMA/133', cls: 'kernel', delay: 60 },
+    { text: '[    0.612009] scsi 0:0:0:0: Direct-Access     ATA VBOX HARDDISK 1.0', cls: 'kernel', delay: 50 },
+    { text: '[    0.712332] sd 0:0:0:0: [sda] 83886080 512-byte logical blocks', cls: 'kernel', delay: 40 },
+    { text: '[    0.810112] EXT4-fs (sda2): mounted filesystem with ordered data mode', cls: 'kernel', delay: 60 },
+    { text: '', delay: 80 },
+    { text: 'Hostname: slackware15', cls: 'bright', delay: 120 },
+    { text: '', delay: 50 },
+    { text: 'Starting udev:                                                     [  OK  ]', cls: 'ok', delay: 200 },
+    { text: 'Setting system clock from hardware clock:                          [  OK  ]', cls: 'ok', delay: 180 },
+    { text: 'Loading kernel modules:                                            [  OK  ]', cls: 'ok', delay: 250 },
+    { text: 'Activating swap partition /dev/sda1:                               [  OK  ]', cls: 'ok', delay: 150 },
+    { text: 'Checking root filesystem:                                          [  OK  ]', cls: 'ok', delay: 300 },
+    { text: 'Remounting root filesystem read-write:                             [  OK  ]', cls: 'ok', delay: 200 },
+    { text: 'Mounting local filesystems:                                        [  OK  ]', cls: 'ok', delay: 180 },
+    { text: 'Initializing random number generator:                              [  OK  ]', cls: 'ok', delay: 120 },
+    { text: 'Configuring network interfaces:                                    [  OK  ]', cls: 'ok', delay: 350 },
+    { text: 'Setting up hostname slackware15:                                   [  OK  ]', cls: 'ok', delay: 100 },
+    { text: 'Starting network daemons:                                          [  OK  ]', cls: 'ok', delay: 200 },
+    { text: 'Starting syslogd:                                                  [  OK  ]', cls: 'ok', delay: 150 },
+    { text: 'Starting klogd:                                                    [  OK  ]', cls: 'ok', delay: 120 },
+    { text: 'Starting crond:                                                    [  OK  ]', cls: 'ok', delay: 130 },
+    { text: 'Starting atd:                                                      [  OK  ]', cls: 'ok', delay: 100 },
+    { text: 'Starting Bluetooth services:                                       [ SKIP ]', cls: 'skip', delay: 80 },
+    { text: 'Starting NFS services:                                             [ SKIP ]', cls: 'skip', delay: 80 },
+    { text: 'Starting CUPS:                                                     [ SKIP ]', cls: 'skip', delay: 80 },
+    { text: 'Starting sshd:                                                     [  OK  ]', cls: 'ok', delay: 200 },
+    { text: 'Starting httpd (Apache/2.4.52):                                    [  OK  ]', cls: 'ok', delay: 300 },
+    { text: 'Starting sendmail:                                                 [  OK  ]', cls: 'ok', delay: 250 },
+    { text: '', delay: 100 },
+  ];
+
+  const slackwareAscii = [
+    '     ____  __            __                           ',
+    '    / ___|| | __ _  ___ | | ____      __ __ _  _ __  ___ ',
+    '    \\___ \\| |/ _` |/ __|| |/ /\\ \\ /\\ / // _` || \'__|/ _ \\',
+    '     ___) | | (_| | (__ |   <  \\ V  V /| (_| || |  |  __/',
+    '    |____/|_|\\__,_|\\___||_|\\_\\  \\_/\\_/  \\__,_||_|   \\___|',
+    '',
+    '    Slackware Linux 15.0 (kernel 5.15.19)',
+    ''
+  ];
+
+  const bootEl = document.getElementById('boot');
+  const messageEl = document.getElementById('message');
+  const loadingEl = document.getElementById('loading');
+
+  // ─── PHASE 1: BOOT ───
+  function runBoot() {
+    return new Promise(function(resolve) {
+      // Calculate total delay to fit in ~13s, leaving 2s for ASCII
+      var totalDelay = 0;
+      bootLines.forEach(function(l) { totalDelay += l.delay; });
+      var scale = 13000 / totalDelay;
+
+      var idx = 0;
+      function nextLine() {
+        if (idx >= bootLines.length) {
+          // Show ASCII art
+          setTimeout(function() {
+            slackwareAscii.forEach(function(line) {
+              var span = document.createElement('div');
+              span.className = 'bright';
+              span.textContent = line;
+              bootEl.appendChild(span);
+            });
+            bootEl.scrollTop = bootEl.scrollHeight;
+            setTimeout(resolve, 2000);
+          }, 200);
+          return;
+        }
+        var line = bootLines[idx++];
+        var span = document.createElement('div');
+        if (line.cls === 'ok') {
+          var parts = line.text.split('[  OK  ]');
+          span.textContent = parts[0];
+          var okSpan = document.createElement('span');
+          okSpan.className = 'ok';
+          okSpan.textContent = '[  OK  ]';
+          span.appendChild(okSpan);
+        } else if (line.cls === 'skip') {
+          var parts2 = line.text.split('[ SKIP ]');
+          span.textContent = parts2[0];
+          var skipSpan = document.createElement('span');
+          skipSpan.className = 'skip';
+          skipSpan.textContent = '[ SKIP ]';
+          span.appendChild(skipSpan);
+        } else {
+          span.className = line.cls || '';
+          span.textContent = line.text;
+        }
+        bootEl.appendChild(span);
+        bootEl.scrollTop = bootEl.scrollHeight;
+        setTimeout(nextLine, Math.round(line.delay * scale));
+      }
+      nextLine();
+    });
+  }
+
+  // ─── PHASE 2: MESSAGE ───
+  function runMessage() {
+    return new Promise(function(resolve) {
+      bootEl.style.display = 'none';
+      messageEl.style.display = 'flex';
+
+      setTimeout(function() {
+        document.getElementById('msgText').classList.add('show');
+      }, 500);
+
+      setTimeout(function() {
+        document.getElementById('msgSub').classList.add('show');
+      }, 3000);
+
+      setTimeout(resolve, 15000);
+    });
+  }
+
+  // ─── PHASE 3: LOADING + REDIRECT ───
+  function runLoading() {
+    var steps = [
+      { at: 0,  text: 'loading sprites...' },
+      { at: 15, text: 'initializing physics engine...' },
+      { at: 30, text: 'loading audio assets...' },
+      { at: 50, text: 'building tile map...' },
+      { at: 65, text: 'loading world 1-1...' },
+      { at: 80, text: 'spawning entities...' },
+      { at: 92, text: 'ready!' },
+    ];
+
+    messageEl.style.display = 'none';
+    loadingEl.style.display = 'flex';
+
+    var bar = document.getElementById('loadBar');
+    var pct = document.getElementById('loadPercent');
+    var step = document.getElementById('loadStep');
+    var current = 0;
+
+    var interval = setInterval(function() {
+      current += 1;
+      if (current > 100) {
+        clearInterval(interval);
+        setTimeout(function() {
+          window.location.href = './mario/index.html';
+        }, 400);
+        return;
+      }
+      bar.style.width = current + '%';
+      pct.textContent = current + '%';
+      for (var i = steps.length - 1; i >= 0; i--) {
+        if (current >= steps[i].at) {
+          step.textContent = steps[i].text;
+          break;
+        }
+      }
+    }, 60);
+  }
+
+  // ─── RUN ───
+  runBoot()
+    .then(runMessage)
+    .then(runLoading);
+})();
+</script>
+</body>
+</html>
