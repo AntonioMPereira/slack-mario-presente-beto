@@ -1,5 +1,5 @@
 import AudioBoard from '../AudioBoard.js';
-import {loadJSON} from '../loaders.js';
+import {loadJSON, resolveURL} from '../loaders.js';
 
 export function loadAudioBoard(name, audioContext) {
     const loadAudio = createAudioLoader(audioContext);
@@ -21,7 +21,7 @@ export function loadAudioBoard(name, audioContext) {
 
 export function createAudioLoader(context) {
     return function loadAudio(url) {
-        return fetch(url)
+        return fetch(resolveURL(url))
            .then(response => {
                 return response.arrayBuffer();
             })
